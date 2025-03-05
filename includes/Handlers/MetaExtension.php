@@ -26,7 +26,7 @@ class MetaExtension {
 
 	/** @var string Client token */
 	const CLIENT_TOKEN = '195311308289826|52dcd04d6c7ed113121b5eb4be23b4a7';
-	const APP_ID = '474166926521348';
+	const APP_ID       = '474166926521348';
 	/** @var string Business name */
 	const BUSINESS_NAME = 'WooCommerce';
 
@@ -37,22 +37,23 @@ class MetaExtension {
 	const COMMERCE_HUB_URL = 'https://www.commercepartnerhub.com/';
 
 	/** @var string Option names for Facebook settings */
-	const OPTION_ACCESS_TOKEN = 'wc_facebook_access_token';
-	const OPTION_MERCHANT_ACCESS_TOKEN = 'wc_facebook_merchant_access_token';
-	const OPTION_PAGE_ACCESS_TOKEN = 'wc_facebook_page_access_token';
-	const OPTION_SYSTEM_USER_ID = 'wc_facebook_system_user_id';
-	const OPTION_BUSINESS_MANAGER_ID = 'wc_facebook_business_manager_id';
-	const OPTION_AD_ACCOUNT_ID = 'wc_facebook_ad_account_id';
-	const OPTION_INSTAGRAM_BUSINESS_ID = 'wc_facebook_instagram_business_id';
-	const OPTION_COMMERCE_MERCHANT_SETTINGS_ID = 'wc_facebook_commerce_merchant_settings_id';
-	const OPTION_EXTERNAL_BUSINESS_ID = 'wc_facebook_external_business_id';
+	const OPTION_ACCESS_TOKEN                    = 'wc_facebook_access_token';
+	const OPTION_MERCHANT_ACCESS_TOKEN           = 'wc_facebook_merchant_access_token';
+	const OPTION_PAGE_ACCESS_TOKEN               = 'wc_facebook_page_access_token';
+	const OPTION_SYSTEM_USER_ID                  = 'wc_facebook_system_user_id';
+	const OPTION_BUSINESS_MANAGER_ID             = 'wc_facebook_business_manager_id';
+	const OPTION_AD_ACCOUNT_ID                   = 'wc_facebook_ad_account_id';
+	const OPTION_INSTAGRAM_BUSINESS_ID           = 'wc_facebook_instagram_business_id';
+	const OPTION_COMMERCE_MERCHANT_SETTINGS_ID   = 'wc_facebook_commerce_merchant_settings_id';
+	const OPTION_EXTERNAL_BUSINESS_ID            = 'wc_facebook_external_business_id';
 	const OPTION_COMMERCE_PARTNER_INTEGRATION_ID = 'wc_facebook_commerce_partner_integration_id';
-	const OPTION_PRODUCT_CATALOG_ID = 'wc_facebook_product_catalog_id';
-	const OPTION_PIXEL_ID = 'wc_facebook_pixel_id';
-	const OPTION_PROFILES = 'wc_facebook_profiles';
-	const OPTION_INSTALLED_FEATURES = 'wc_facebook_installed_features';
-	const OPTION_HAS_CONNECTED_FBE_2 = 'wc_facebook_has_connected_fbe_2';
-	const OPTION_HAS_AUTHORIZED_PAGES = 'wc_facebook_has_authorized_pages_read_engagement';
+	const OPTION_PRODUCT_CATALOG_ID              = 'wc_facebook_product_catalog_id';
+	const OPTION_PIXEL_ID                        = 'wc_facebook_pixel_id';
+	const OPTION_PROFILES                        = 'wc_facebook_profiles';
+	const OPTION_INSTALLED_FEATURES              = 'wc_facebook_installed_features';
+	const OPTION_HAS_CONNECTED_FBE_2             = 'wc_facebook_has_connected_fbe_2';
+	const OPTION_HAS_AUTHORIZED_PAGES            = 'wc_facebook_has_authorized_pages_read_engagement';
+
 
 	/** @var string Nonce action */
 	const NONCE_ACTION = 'wc_facebook_ajax_token_update';
@@ -101,9 +102,9 @@ class MetaExtension {
 	/**
 	 * Sanitizes and retrieves a value from an array.
 	 *
-	 * @param array $data Array to retrieve value from.
+	 * @param array  $data Array to retrieve value from.
 	 * @param string $key Key to retrieve.
-	 * @param bool $sanitize Whether to sanitize the value.
+	 * @param bool   $sanitize Whether to sanitize the value.
 	 *
 	 * @return mixed|string The value or empty string if not set.
 	 * @since 2.0.0
@@ -223,10 +224,14 @@ class MetaExtension {
 		foreach ( $options as $option_name ) {
 			if ( in_array( $option_name, array( self::OPTION_PROFILES, self::OPTION_INSTALLED_FEATURES ), true ) ) {
 				update_option( $option_name, null );
-			} elseif ( in_array( $option_name, array(
-				self::OPTION_HAS_CONNECTED_FBE_2,
-				self::OPTION_HAS_AUTHORIZED_PAGES
-			), true ) ) {
+			} elseif ( in_array(
+				$option_name,
+				array(
+					self::OPTION_HAS_CONNECTED_FBE_2,
+					self::OPTION_HAS_AUTHORIZED_PAGES,
+				),
+				true
+			) ) {
 				update_option( $option_name, 'no' );
 			} else {
 				update_option( $option_name, '' );
@@ -247,7 +252,7 @@ class MetaExtension {
 	 *
 	 * @param string $method HTTP method (GET, POST, etc.)
 	 * @param string $endpoint API endpoint
-	 * @param array $params Request parameters
+	 * @param array  $params Request parameters
 	 *
 	 * @return array Response data
 	 * @throws \Exception If the request fails.
@@ -363,9 +368,9 @@ class MetaExtension {
 
 		error_log( 'Request URI: ' . ( isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : 'N/A' ) );
 		error_log( 'Request Method: ' . ( isset( $_SERVER['REQUEST_METHOD'] ) ? $_SERVER['REQUEST_METHOD'] : 'N/A' ) );
-		error_log( 'Referer: ' . ( $request->get_header('referer') ?? 'N/A' ) );
-		error_log( 'User-Agent: ' . ( $request->get_header('User-Agent') ?? 'N/A' ) );
-		
+		error_log( 'Referer: ' . ( $request->get_header( 'referer' ) ?? 'N/A' ) );
+		error_log( 'User-Agent: ' . ( $request->get_header( 'User-Agent' ) ?? 'N/A' ) );
+
 		// Log cookies.
 		error_log( 'Cookies: ' . print_r( $_COOKIE, true ) );
 
@@ -452,7 +457,7 @@ class MetaExtension {
 	/**
 	 * Generates the Commerce Hub iframe splash page URL.
 	 *
-	 * @param bool $is_connected Whether the plugin is currently connected.
+	 * @param bool   $is_connected Whether the plugin is currently connected.
 	 * @param object $plugin The plugin instance.
 	 * @param string $external_business_id External business ID.
 	 *
