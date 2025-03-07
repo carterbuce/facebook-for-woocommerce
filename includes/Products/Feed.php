@@ -172,6 +172,8 @@ class Feed {
 			return;
 		}
 
+		error_log( 'scheduling feed generation for blog id: ' + get_current_blog_id() );
+
 		/**
 		 * Filters the frequency with which the product feed data is generated.
 		 *
@@ -204,6 +206,7 @@ class Feed {
 		];
 
 		try {
+			error_log( 'sending request to upload feed for blog id: ' . get_current_blog_id() );
 			facebook_for_woocommerce()->get_api()->create_product_feed_upload( $feed_id, $data );
 		} catch ( Exception $exception ) {
 			facebook_for_woocommerce()->log( 'Failed to create feed upload request: ' . $exception->getMessage() );
