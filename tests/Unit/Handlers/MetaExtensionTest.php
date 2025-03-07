@@ -36,13 +36,14 @@ class MetaExtensionTest extends WP_UnitTestCase {
      */
     public function test_generate_iframe_splash_url() {
         $plugin = facebook_for_woocommerce();
-        
+
         $url = MetaExtension::generate_iframe_splash_url(true, $plugin, 'test_business_id');
+        $handler = facebook_for_woocommerce()->get_connection_handler();
 
         // Assert URL contains expected parameters
         $this->assertStringContainsString('access_client_token=' . MetaExtension::CLIENT_TOKEN, $url);
         $this->assertStringContainsString('app_id=', $url);
-        $this->assertStringContainsString('business_name=' . urlencode(MetaExtension::BUSINESS_NAME), $url);
+        $this->assertStringContainsString('business_name=' . rawurlencode($handler->get_business_name()), $url);
         $this->assertStringContainsString('external_business_id=test_business_id', $url);
         $this->assertStringContainsString('installed=1', $url);
         $this->assertStringContainsString('external_client_metadata=', $url);
@@ -85,13 +86,13 @@ class MetaExtensionTest extends WP_UnitTestCase {
     }
 
     /**
-     * Test REST API token update with missing required merchant token
+     * Test rest_update_fb_settings with missing merchant token
      */
     public function test_rest_update_fb_settings_missing_merchant_token() {
-        // Create a mock for WP_REST_Request
+        // Create a mock of WP_REST_Request
         $request = $this->getMockBuilder(WP_REST_Request::class)
                         ->disableOriginalConstructor()
-                        ->setMethods(array('get_json_params'))
+                        ->onlyMethods(['get_json_params'])
                         ->getMock();
         
         // Set up the mock to return our test data
@@ -104,14 +105,17 @@ class MetaExtensionTest extends WP_UnitTestCase {
 
         $response = MetaExtension::rest_update_fb_settings($request);
 
-        $this->assertInstanceOf(WP_Error::class, $response);
-        $this->assertEquals('missing_token', $response->get_error_code());
+        // Assert that we get a WP_REST_Response with success=false
+        $this->assertInstanceOf(WP_REST_Response::class, $response);
+        $data = $response->get_data();
+        $this->assertFalse($data['success']);
+        $this->assertNotEmpty($data['message']);
     }
 
     /**
-     * Test generate_iframe_management_url with valid access token
+     * Test generate_iframe_management_url
      */
-    public function test_get_commerce_extension_iframe_url() {
+    public function test_generate_iframe_management_url() {
         // Set up the access token
         update_option('wc_facebook_access_token', 'test_access_token');
         
@@ -119,25 +123,19 @@ class MetaExtensionTest extends WP_UnitTestCase {
         $url = MetaExtension::generate_iframe_management_url('');
         $this->assertEmpty($url);
         
-        // Test with valid business ID but we can't mock the API call
-        // so we're just testing the method exists
-        $this->assertTrue(method_exists(MetaExtension::class, 'generate_iframe_management_url'));
-    }
-
-    /**
-     * Test generate_iframe_management_url
-     */
-    public function test_generate_iframe_management_url() {
-        $plugin = facebook_for_woocommerce();
+        // Test with valid business ID
+        $business_id = '123456789';
+        $expected_url = 'https://www.facebook.com/commerce/app/management/123456789/';
         
-        // Test with no access token
-        update_option('wc_facebook_access_token', '');
-        $url = MetaExtension::generate_iframe_management_url('test_business_id');
-        $this->assertEmpty($url);
+        // Add mock API response filter
+        $this->add_mock_api_response_filter($business_id);
         
-        // Since we can't easily mock the call_api method,
-        // we'll just verify the method exists and is called
-        $this->assertTrue(method_exists(MetaExtension::class, 'generate_iframe_management_url'));
+        $url = MetaExtension::generate_iframe_management_url($business_id);
+        
+        // Remove our filter
+        remove_all_filters('pre_http_request');
+        
+        $this->assertEquals($expected_url, $url);
     }
 
     /**
@@ -153,26 +151,54 @@ class MetaExtensionTest extends WP_UnitTestCase {
         // Trigger the rest_api_init action
         do_action('rest_api_init');
         
-        // If we got here without errors, the test passes
-        $this->assertTrue(true);
+        // Check if the routes were registered
+        $routes = rest_get_server()->get_routes();
+        
+        // Verify the update_fb_settings endpoint exists
+        $this->assertArrayHasKey('/wc-facebook/v1/update_fb_settings', $routes);
+        $this->assertArrayHasKey('POST', $routes['/wc-facebook/v1/update_fb_settings'][0]['methods']);
+        
+        // Just verify the permission callback and callback are set and callable
+        $this->assertTrue(isset($routes['/wc-facebook/v1/update_fb_settings'][0]['callback']));
+        $this->assertTrue(isset($routes['/wc-facebook/v1/update_fb_settings'][0]['permission_callback']));
+        
+        // Verify the uninstall endpoint exists
+        $this->assertArrayHasKey('/wc-facebook/v1/uninstall', $routes);
+        $this->assertArrayHasKey('POST', $routes['/wc-facebook/v1/uninstall'][0]['methods']);
+        
+        // Just verify the permission callback and callback are set and callable
+        $this->assertTrue(isset($routes['/wc-facebook/v1/uninstall'][0]['callback']));
+        $this->assertTrue(isset($routes['/wc-facebook/v1/uninstall'][0]['permission_callback']));
     }
-
     /**
-     * Test that generate_iframe_management_url works correctly
-     * This is a simplified test since we can't mock private static methods
+     * Helper method to add a filter that mocks the Facebook API response
+     *
+     * @param string $business_id The business ID to use in the mock response
      */
-    public function test_get_commerce_extension_iframe_management_url() {
-        $external_business_id = 'test_business_id';
-        
-        // Set up the access token
-        update_option(MetaExtension::OPTION_ACCESS_TOKEN, 'test_token');
-        
-        // Since we can't mock the private static call_api method,
-        // we'll just test that the method exists and returns empty string
-        // when no API response is available
-        $result = MetaExtension::generate_iframe_management_url($external_business_id);
-        
-        // Without a real API response, the method should return empty string
-        $this->assertEmpty($result);
+    private function add_mock_api_response_filter($business_id) {
+        add_filter('pre_http_request', function($preempt, $args, $url) use ($business_id) {
+            // Check if this is the Facebook API call we want to mock
+            if (strpos($url, 'graph.facebook.com') !== false && 
+                strpos($url, 'fbe_business') !== false) {
+                
+                return [
+                    'body' => json_encode([
+                        'commerce_extension' => [
+                            'uri' => "https://www.facebook.com/commerce/app/management/{$business_id}/"
+                        ]
+                    ]),
+                    'response' => [
+                        'code' => 200,
+                        'message' => 'OK'
+                    ],
+                    'headers' => [],
+                    'cookies' => [],
+                    'filename' => null
+                ];
+            }
+            
+            // Not our API call, let WordPress handle it
+            return $preempt;
+        }, 10, 3);
     }
 }

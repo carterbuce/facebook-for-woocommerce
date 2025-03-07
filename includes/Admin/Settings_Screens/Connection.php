@@ -25,16 +25,6 @@ class Connection extends Abstract_Settings_Screen {
 	const ID = 'connection';
 
 	/**
-	 * Determines if we should use enhanced onboarding.
-	 *
-	 * @return bool
-	 * @since 2.0.0
-	 */
-	protected function use_enhanced_onboarding() {
-		return facebook_for_woocommerce()->get_integration()->use_enhanced_onboarding();
-	}
-
-	/**
 	 * Connection constructor.
 	 */
 	public function __construct() {
@@ -50,8 +40,15 @@ class Connection extends Abstract_Settings_Screen {
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 	}
 
+	/**
+	 * Enqueues the wp-api script only on the connection settings page.
+	 *
+	 * @internal
+	 */
 	public function enqueue_admin_scripts() {
-		wp_enqueue_script( 'wp-api' );
+		if ( $this->is_current_screen_page() ) {
+			wp_enqueue_script( 'wp-api' );
+		}
 	}
 
 	/**
@@ -63,6 +60,14 @@ class Connection extends Abstract_Settings_Screen {
 		$this->title = __( 'Connection', 'facebook-for-woocommerce' );
 	}
 
+	/**
+	 * Determines if we should use enhanced onboarding.
+	 *
+	 * @return bool
+	 */
+	protected function use_enhanced_onboarding() {
+		return facebook_for_woocommerce()->get_integration()->use_enhanced_onboarding();
+	}
 
 	/**
 	 * Adds admin notices.
@@ -104,8 +109,6 @@ class Connection extends Abstract_Settings_Screen {
 	 * Enqueue the assets.
 	 *
 	 * @internal
-	 *
-	 * @since 2.0.0
 	 */
 	public function enqueue_assets() {
 
@@ -127,7 +130,6 @@ class Connection extends Abstract_Settings_Screen {
 		if ( $this->use_enhanced_onboarding() ) {
 			$this->render_facebook_iframe();
 			parent::render();
-
 			return;
 		}
 
@@ -278,8 +280,6 @@ class Connection extends Abstract_Settings_Screen {
 
 	/**
 	 * Renders the appropriate Facebook iframe based on connection status.
-	 *
-	 * @since 2.0.0
 	 */
 	private function render_facebook_iframe() {
 		$connection            = facebook_for_woocommerce()->get_connection_handler();
@@ -386,10 +386,6 @@ class Connection extends Abstract_Settings_Screen {
 		}
 		?>
 		<script type="text/javascript">
-			document.addEventListener('DOMContentLoaded', () => {
-				console.log('update_fb_settings url: ' + wpApiSettings.root + 'wc-facebook/v1/update_fb_settings');
-				// rest of your code...
-			});
 			window.addEventListener('message', function (event) {
 				const message = event.data;
 				const messageEvent = message.event;
@@ -398,7 +394,7 @@ class Connection extends Abstract_Settings_Screen {
 					const requestBody = {
 						access_token: message.access_token,
 						merchant_access_token: message.access_token,
-						page_access_token: '',
+						page_access_token: message.access_token,
 						product_catalog_id: message.catalog_id,
 						pixel_id: message.pixel_id,
 						page_id: message.page_id,
@@ -464,9 +460,8 @@ class Connection extends Abstract_Settings_Screen {
 		<?php
 	}
 
-
 	/**
-	 * Gets the screen settings.
+	 * Renders the message handler script in the footer.
 	 *
 	 * @return array
 	 * @since 2.0.0

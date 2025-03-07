@@ -25,13 +25,13 @@ use WP_Error;
 class MetaExtension {
 
 	/** @var string Client token */
-	const CLIENT_TOKEN = '195311308289826|52dcd04d6c7ed113121b5eb4be23b4a7';
+	const CLIENT_TOKEN = '474166926521348|92e978eb27baf47f9df578b48d430a2e';
 	const APP_ID       = '474166926521348';
 	/** @var string Business name */
 	const BUSINESS_NAME = 'WooCommerce';
 
 	/** @var string API version */
-	const API_VERSION = 'v18.0';
+	const API_VERSION = 'v22.0';
 
 	/** @var string Commerce Hub base URL */
 	const COMMERCE_HUB_URL = 'https://www.commercepartnerhub.com/';
@@ -72,15 +72,30 @@ class MetaExtension {
 	// ==========================
 
 	/**
-	 * Validates if the required tokens are present.
+	 * Validates that required tokens are present.
 	 *
 	 * @param array $tokens Array of tokens to validate.
 	 *
-	 * @return bool True if all required tokens are present.
+	 * @return true|WP_Error True if all required tokens are present, WP_Error otherwise.
 	 * @since 2.0.0
 	 */
 	private static function validate_required_tokens( $tokens ) {
-		return ! empty( $tokens['access_token'] ) && ! empty( $tokens['merchant_access_token'] ) && ! empty( $tokens['page_access_token'] );
+		$error_message = '';
+		if ( empty( $tokens['merchant_access_token'] ) ) {
+			$error_message = __( 'Missing merchant access token', 'facebook-for-woocommerce' );
+		} elseif ( empty( $tokens['access_token'] ) ) {
+			$error_message = __( 'Missing access token', 'facebook-for-woocommerce' );
+		}
+
+		if ( $error_message ) {
+			return new WP_Error(
+				'missing_token',
+				$error_message,
+				array( 'status' => 400 )
+			);
+		}
+
+		return true;
 	}
 
 	/**
@@ -300,7 +315,7 @@ class MetaExtension {
 	// ==========================
 
 	/**
-	 * REST API endpoint initialization.
+	 * Initialize the REST API endpoint for updating Facebook settings.
 	 *
 	 * @return void
 	 */
@@ -354,40 +369,21 @@ class MetaExtension {
 	 *  - profiles: profiles data.
 	 *  - installed_features: installed features data.
 	 *
-	 * @param WP_REST_Request $request The request object.
-	 *
-	 * @return WP_REST_Response|WP_Error
+	 * @param WP_REST_Request $request The request.
+	 * @return WP_REST_Response
 	 */
 	public static function rest_update_fb_settings( WP_REST_Request $request ) {
 		// Get JSON data from request body
 		$params = $request->get_json_params();
 
-		$current_blog_id = get_current_blog_id();
-		error_log( '(error_log) rest_update_fb_settings called from Current Blog ID: ' . $current_blog_id );
-		facebook_for_woocommerce()->log( '(fb_log) rest_update_fb_settings called from Current Blog ID: ' . $current_blog_id );
-
-		error_log( 'Request URI: ' . ( isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : 'N/A' ) );
-		error_log( 'Request Method: ' . ( isset( $_SERVER['REQUEST_METHOD'] ) ? $_SERVER['REQUEST_METHOD'] : 'N/A' ) );
-		error_log( 'Referer: ' . ( $request->get_header( 'referer' ) ?? 'N/A' ) );
-		error_log( 'User-Agent: ' . ( $request->get_header( 'User-Agent' ) ?? 'N/A' ) );
-
-		// Log cookies.
-		error_log( 'Cookies: ' . print_r( $_COOKIE, true ) );
-
-		// Log request headers (if getallheaders() is available).
-		if ( function_exists( 'getallheaders' ) ) {
-			$headers = getallheaders();
-			error_log( 'Request Headers: ' . print_r( $headers, true ) );
-		} else {
-			error_log( 'getallheaders() function is not available.' );
-		}
-
-		// Required parameter check
-		if ( empty( $params['merchant_access_token'] ) ) {
-			return new WP_Error(
-				'missing_token',
-				__( 'Missing merchant access token', 'facebook-for-woocommerce' ),
-				array( 'status' => 400 )
+		// Validate required tokens
+		$validation_result = self::validate_required_tokens( $params );
+		if ( is_wp_error( $validation_result ) ) {
+			return rest_ensure_response(
+				array(
+					'success' => false,
+					'message' => $validation_result->get_error_message(),
+				)
 			);
 		}
 
@@ -463,13 +459,15 @@ class MetaExtension {
 	 *
 	 * @return string
 	 */
-	public static function generate_iframe_splash_url( $is_connected, $plugin, $external_business_id ) {
+	public static function generate_iframe_splash_url( $is_connected, $plugin, $external_business_id ): string {
+		$connection_handler       = facebook_for_woocommerce()->get_connection_handler();
 		$external_client_metadata = array(
-			'shop_domain'                           => wc_get_page_permalink( 'shop' ) ? wc_get_page_permalink( 'shop' ) : \home_url(),
+			'shop_domain'                           => wc_get_page_permalink( 'shop' ),
 			'admin_url'                             => admin_url(),
 			'client_version'                        => $plugin->get_version(),
 			'commerce_partner_seller_platform_type' => 'SELF_SERVE_PLATFORM',
 			'country_code'                          => WC()->countries->get_base_country(),
+			'platform_store_id'                     => get_current_blog_id(),
 		);
 
 		return add_query_arg(
@@ -477,10 +475,10 @@ class MetaExtension {
 				'access_client_token'      => self::CLIENT_TOKEN,
 				'business_vertical'        => 'ECOMMERCE',
 				'channel'                  => 'COMMERCE',
-				'app_id'                   => Connection::CLIENT_ID,
-				'business_name'            => self::BUSINESS_NAME,
+				'app_id'                   => facebook_for_woocommerce()->get_connection_handler()->get_client_id(),
+				'business_name'            => rawurlencode( $connection_handler->get_business_name() ),
 				'currency'                 => get_woocommerce_currency(),
-				'timezone'                 => 'America/Los_Angeles',
+				'timezone'                 => $connection_handler->get_timezone_string(),
 				'external_business_id'     => $external_business_id,
 				'installed'                => $is_connected,
 				'external_client_metadata' => rawurlencode( wp_json_encode( $external_client_metadata ) ),
