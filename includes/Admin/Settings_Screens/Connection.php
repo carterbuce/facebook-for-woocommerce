@@ -126,6 +126,7 @@ class Connection extends Abstract_Settings_Screen {
 		// Check if we should render iframe
 		if ( $this->use_enhanced_onboarding() ) {
 			$this->render_facebook_iframe();
+			parent::render();
 
 			return;
 		}

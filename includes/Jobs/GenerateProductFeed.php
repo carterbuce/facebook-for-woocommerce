@@ -50,6 +50,8 @@ class GenerateProductFeed extends AbstractChainedJob {
 	 * @throws Exception On error. The failure will be logged by Action Scheduler and the job chain will stop.
 	 */
 	protected function get_items_for_batch( int $batch_number, array $args ): array {
+		error_log( 'starting error feed get_items_for_batch for site: ' + get_current_blog_id() );
+
 		global $wpdb;
 
 		$product_ids = $wpdb->get_col(
@@ -91,7 +93,7 @@ class GenerateProductFeed extends AbstractChainedJob {
 		 * filter out variable products in ::get_items_for_batch() because if a batch only contains variable products
 		 * the job will end prematurely thinking it has nothing more to process.
 		 */
-		$products = wc_get_products(
+		$products       = wc_get_products(
 			array(
 				'type'    => array( 'simple', 'variation' ),
 				'include' => $items,
@@ -99,7 +101,7 @@ class GenerateProductFeed extends AbstractChainedJob {
 				'limit'   => $this->get_batch_size(),
 			)
 		);
-		$feed_handler = new \WC_Facebook_Product_Feed();
+		$feed_handler   = new \WC_Facebook_Product_Feed();
 		$temp_feed_file = fopen( $feed_handler->get_temp_file_path(), 'a' );
 		$feed_handler->write_products_feed_to_temp_file( $products, $temp_feed_file );
 		if ( is_resource( $temp_feed_file ) ) {

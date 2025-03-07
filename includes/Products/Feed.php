@@ -172,6 +172,8 @@ class Feed {
 			return;
 		}
 
+		error_log( 'scheduling feed generation' );
+
 		/**
 		 * Filters the frequency with which the product feed data is generated.
 		 *
@@ -205,6 +207,7 @@ class Feed {
 
 		try {
 			facebook_for_woocommerce()->get_api()->create_upload( $feed_id, $data );
+			error_log( 'sending request to upload feed' );
 		} catch ( Exception $exception ) {
 			facebook_for_woocommerce()->log( 'Failed to create feed upload request: ' . $exception->getMessage() );
 		}
