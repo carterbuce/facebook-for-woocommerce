@@ -51,7 +51,7 @@ class GenerateProductFeed extends AbstractChainedJob {
 	 */
 	protected function get_items_for_batch( int $batch_number, array $args ): array {
 		global $wpdb;
-		error_log( 'starting error feed get_items_for_batch for site: ' + get_current_blog_id() );
+		error_log( 'starting error feed get_items_for_batch for site: ' . get_current_blog_id() );
 
 		$product_ids = $wpdb->get_col(
 			$wpdb->prepare(

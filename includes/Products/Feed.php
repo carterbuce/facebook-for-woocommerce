@@ -174,7 +174,7 @@ class Feed {
 			return;
 		}
 
-		error_log( 'scheduling feed generation for blog id: ' + get_current_blog_id() );
+		error_log( 'scheduling feed generation for blog id: ' . get_current_blog_id() );
 
 		/**
 		 * Filters the frequency with which the product feed data is generated.
