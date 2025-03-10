@@ -334,6 +334,7 @@ class WC_Facebookcommerce extends WooCommerce\Facebook\Framework\Plugin {
 	 * @param string $log_id optional log id to segment the files by, defaults to plugin id
 	 */
 	public function log( $message, $log_id = null ) {
+		error_log( $message );
 		// Bail if site is connected and user has disabled logging.
 		// If site is disconnected, force-enable logging so merchant can diagnose connection issues.
 		if ( ( ! $this->get_integration() || ! $this->get_integration()->is_debug_mode_enabled() ) && $this->get_connection_handler()->is_connected() ) {

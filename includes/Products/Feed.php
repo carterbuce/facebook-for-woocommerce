@@ -169,6 +169,7 @@ class Feed {
 		// Only schedule if has not opted out of feed generation (e.g. large stores).
 		$store_allows_feed = $configured_ok && $integration->is_legacy_feed_file_generation_enabled();
 		if ( ! $store_allows_sync || ! $store_allows_feed ) {
+			error_log( 'couldnt schedule feed generation for blog id: ' . get_current_blog_id() . ' store allows sync: ' . $store_allows_feed . ' store allows feed: ' . $store_allows_feed );
 			as_unschedule_all_actions( self::GENERATE_FEED_ACTION );
 			return;
 		}
