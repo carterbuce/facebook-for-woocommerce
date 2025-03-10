@@ -185,7 +185,9 @@ class Feed {
 		 * @param int $interval the frequency with which the product feed data is generated, in seconds.
 		 */
 		$interval = apply_filters( 'wc_facebook_feed_generation_interval', DAY_IN_SECONDS );
+		error_log( 'feed interval: ' . $interval );
 		if ( ! as_next_scheduled_action( self::GENERATE_FEED_ACTION ) ) {
+			error_log( 'scheduling feed generation for blog id: ' . get_current_blog_id() );
 			as_schedule_recurring_action( time(), max( 2, $interval ), self::GENERATE_FEED_ACTION, array(), facebook_for_woocommerce()->get_id_dasherized() );
 		}
 	}
