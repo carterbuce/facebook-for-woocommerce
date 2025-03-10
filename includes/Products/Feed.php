@@ -145,9 +145,11 @@ class Feed {
 	public function regenerate_feed() {
 		// Maybe use new ( experimental ), feed generation framework.
 		if ( facebook_for_woocommerce()->get_integration()->is_new_style_feed_generation_enabled() ) {
+			error_log( 'using new style feed generation' );
 			$generate_feed_job = facebook_for_woocommerce()->job_manager->generate_product_feed_job;
 			$generate_feed_job->queue_start();
 		} else {
+			error_log( 'using old style feed generation' );
 			$feed_handler = new \WC_Facebook_Product_Feed();
 			$feed_handler->generate_feed();
 		}
@@ -211,7 +213,7 @@ class Feed {
 		];
 
 		try {
-			error_log( 'sending request to upload feed for blog id: ' . get_current_blog_id() );
+			error_log( 'sending request to upload feed for blog id: ' . get_current_blog_id() . ' and feed data url: ' . self::get_feed_data_url() );
 			facebook_for_woocommerce()->get_api()->create_product_feed_upload( $feed_id, $data );
 		} catch ( Exception $exception ) {
 			facebook_for_woocommerce()->log( 'Failed to create feed upload request: ' . $exception->getMessage() );

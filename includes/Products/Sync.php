@@ -145,12 +145,12 @@ class Sync {
 	 * @return \stdClass|object|null
 	 */
 	public function schedule_sync() {
-		error_log( 'trying to schedule product SYNC for blog id: ' . get_current_blog_id() );
+//		error_log( 'trying to schedule product SYNC for blog id: ' . get_current_blog_id() );
 		if ( ! empty( $this->requests ) ) {
 
+			error_log( 'scheduling product SYNC for blog id: ' . get_current_blog_id() );
 			$job_handler = facebook_for_woocommerce()->get_products_sync_background_handler();
 			$job         = $job_handler->create_job( array( 'requests' => $this->requests ) );
-			error_log( 'scheduling product SYNC for blog id: ' . get_current_blog_id() );
 			$job_handler->dispatch();
 
 			return $job;

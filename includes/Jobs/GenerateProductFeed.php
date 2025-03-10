@@ -25,16 +25,18 @@ class GenerateProductFeed extends AbstractChainedJob {
 		$feed_handler->create_files_to_protect_product_feed_directory();
 		$feed_handler->prepare_temporary_feed_file();
 		facebook_for_woocommerce()->get_tracker()->reset_batch_generation_time();
+		error_log( 'generate product feed job starting' );
 	}
 
 	/**
 	 * Called after the finishing the job.
 	 */
 	protected function handle_end() {
+		error_log( 'finishing product feed generation for blog: ' . get_current_blog_id() );
 		$feed_handler = new \WC_Facebook_Product_Feed();
 		$feed_handler->rename_temporary_feed_file_to_final_feed_file();
 		facebook_for_woocommerce()->get_tracker()->save_batch_generation_time();
-
+		error_log( 'finished product feed generation. running feed gen completed action' );
 		do_action( 'wc_facebook_feed_generation_completed' );
 	}
 
@@ -50,8 +52,8 @@ class GenerateProductFeed extends AbstractChainedJob {
 	 * @throws Exception On error. The failure will be logged by Action Scheduler and the job chain will stop.
 	 */
 	protected function get_items_for_batch( int $batch_number, array $args ): array {
+		error_log( 'starting feed get_items_for_batch for site: ' . get_current_blog_id() );
 		global $wpdb;
-		error_log( 'starting error feed get_items_for_batch for site: ' . get_current_blog_id() );
 
 		$product_ids = $wpdb->get_col(
 			$wpdb->prepare(
@@ -102,6 +104,7 @@ class GenerateProductFeed extends AbstractChainedJob {
 		);
 		$feed_handler   = new \WC_Facebook_Product_Feed();
 		$temp_feed_file = fopen( $feed_handler->get_temp_file_path(), 'a' );
+		error_log( 'writing ' . count( $products ) . ' products to file for feed syncing on blog: ' . get_current_blog_id() );
 		$feed_handler->write_products_feed_to_temp_file( $products, $temp_feed_file );
 		if ( is_resource( $temp_feed_file ) ) {
 			fclose( $temp_feed_file );
