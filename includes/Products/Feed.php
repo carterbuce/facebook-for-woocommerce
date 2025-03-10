@@ -161,6 +161,7 @@ class Feed {
 	 * @since 1.11.0
 	 */
 	public function schedule_feed_generation() {
+		error_log( 'trying to schedule feed generation for blog id: ' . get_current_blog_id() );
 		$integration   = facebook_for_woocommerce()->get_integration();
 		$configured_ok = $integration && $integration->is_configured();
 		// Only schedule feed job if store has not opted out of product sync.
@@ -197,6 +198,7 @@ class Feed {
 	public function send_request_to_upload_feed() {
 		$feed_id = self::retrieve_or_create_integration_feed_id();
 		if ( empty( $feed_id ) ) {
+			error_log( 'Feed: integration feed ID is null or empty, feed will not be uploaded for blog id: ' . get_current_blog_id() );
 			WC_Facebookcommerce_Utils::log( 'Feed: integration feed ID is null or empty, feed will not be uploaded.' );
 			return;
 		}
@@ -221,6 +223,7 @@ class Feed {
 	 * @internal
 	 */
 	public function retrieve_or_create_integration_feed_id() {
+		error_log( 'trying to retrieve or create feed id for blog: ' . get_current_blog_id() );
 		// Step 1 - Get feed ID if it is already available in local cache
 		$feed_id = facebook_for_woocommerce()->get_integration()->get_feed_id();
 		if ( $feed_id ) {
