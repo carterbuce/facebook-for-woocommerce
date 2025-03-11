@@ -20,7 +20,7 @@ use WP_Error;
 /**
  * Handles Meta Commerce Extension functionality and configuration.
  *
- * @since 2.0.0
+ * @since 2.5.2
  */
 class MetaExtension {
 
@@ -58,7 +58,7 @@ class MetaExtension {
 	/**
 	 * Constructor.
 	 *
-	 * @since 2.0.0
+	 * @since 2.5.2
 	 */
 	public function __construct() {
 		add_action( 'rest_api_init', array( __CLASS__, 'init_rest_endpoint' ) );
@@ -74,7 +74,7 @@ class MetaExtension {
 	 * @param array $tokens Array of tokens to validate.
 	 *
 	 * @return true|WP_Error True if all required tokens are present, WP_Error otherwise.
-	 * @since 2.0.0
+	 * @internal
 	 */
 	private static function validate_required_tokens( $tokens ) {
 		$error_message = '';
@@ -101,7 +101,7 @@ class MetaExtension {
 	 * @param array $settings Array of settings to update.
 	 *
 	 * @return void
-	 * @since 2.0.0
+	 * @internal
 	 */
 	private static function update_settings( $settings ) {
 		foreach ( $settings as $key => $value ) {
@@ -119,7 +119,7 @@ class MetaExtension {
 	 * @param bool   $sanitize Whether to sanitize the value.
 	 *
 	 * @return mixed|string The value or empty string if not set.
-	 * @since 2.0.0
+	 * @internal
 	 */
 	private static function get_param_value( $data, $key, $sanitize = true ) {
 		if ( ! isset( $data[ $key ] ) ) {
@@ -141,7 +141,7 @@ class MetaExtension {
 	 * @param array $params Request parameters.
 	 *
 	 * @return array Mapped options with values.
-	 * @since 2.0.0
+	 * @internal
 	 */
 	private static function map_params_to_options( $params ) {
 		$options = array();
@@ -193,7 +193,7 @@ class MetaExtension {
 	 * @param array $params Parameters containing tokens.
 	 *
 	 * @return void
-	 * @since 2.0.0
+	 * @internal
 	 */
 	private static function update_connection_status( $params ) {
 		if ( ! empty( $params['access_token'] ) ) {
@@ -209,7 +209,7 @@ class MetaExtension {
 	 * Clears Facebook integration options.
 	 *
 	 * @return void
-	 * @since 2.0.0
+	 * @internal
 	 */
 	private static function clear_integration_options() {
 		$options = array(
@@ -270,6 +270,7 @@ class MetaExtension {
 	 *
 	 * @return array Response data
 	 * @throws \Exception If the request fails.
+	 * @internal
 	 */
 	private static function call_api( $method, $endpoint, $params ) {
 		$url = 'https://graph.facebook.com/' . self::API_VERSION . '/' . $endpoint;
@@ -317,6 +318,7 @@ class MetaExtension {
 	 * Initialize the REST API endpoint for updating Facebook settings.
 	 *
 	 * @return void
+	 * @since 2.5.2
 	 */
 	public static function init_rest_endpoint() {
 		register_rest_route(
@@ -344,6 +346,7 @@ class MetaExtension {
 	 * Permission callback for the REST API endpoint.
 	 *
 	 * @return bool
+	 * @since 2.5.2
 	 */
 	public static function rest_update_fb_settings_permission_callback() {
 		return current_user_can( 'manage_woocommerce' );
@@ -365,6 +368,7 @@ class MetaExtension {
 	 *
 	 * @param WP_REST_Request $request The request.
 	 * @return WP_REST_Response
+	 * @since 2.5.2
 	 */
 	public static function rest_update_fb_settings( WP_REST_Request $request ) {
 		// Get JSON data from request body
@@ -401,6 +405,7 @@ class MetaExtension {
 	 * REST API endpoint callback to handle uninstall requests.
 	 *
 	 * @return WP_REST_Response|WP_Error
+	 * @since 2.5.2
 	 */
 	public static function rest_handle_uninstall() {
 		try {
@@ -452,11 +457,12 @@ class MetaExtension {
 	 * @param string $external_business_id External business ID.
 	 *
 	 * @return string
+	 * @since 2.5.2
 	 */
 	public static function generate_iframe_splash_url( $is_connected, $plugin, $external_business_id ): string {
 		$connection_handler       = facebook_for_woocommerce()->get_connection_handler();
 		$external_client_metadata = array(
-			'shop_domain'                           => wc_get_page_permalink( 'shop' ),
+			'shop_domain'                           => site_url( '/' ),
 			'admin_url'                             => admin_url(),
 			'client_version'                        => $plugin->get_version(),
 			'commerce_partner_seller_platform_type' => 'SELF_SERVE_PLATFORM',
@@ -487,6 +493,7 @@ class MetaExtension {
 	 * @param string $external_business_id External business ID.
 	 *
 	 * @return string
+	 * @since 2.5.2
 	 */
 	public static function generate_iframe_management_url( $external_business_id ) {
 		$access_token = get_option( self::OPTION_ACCESS_TOKEN, '' );
