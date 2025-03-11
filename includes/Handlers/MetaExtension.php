@@ -12,6 +12,7 @@ namespace WooCommerce\Facebook\Handlers;
 
 defined( 'ABSPATH' ) || exit;
 
+use WC_Facebookcommerce_Integration;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
@@ -166,6 +167,8 @@ class MetaExtension {
 			'catalog_id'                      => \WC_Facebookcommerce_Integration::OPTION_PRODUCT_CATALOG_ID,
 		);
 
+		error_log( 'connected to facebook on blog id: ' . get_current_blog_id() );
+
 		// Process each parameter
 		foreach ( $mapping as $param_key => $option_name ) {
 			if ( isset( $params[ $param_key ] ) ) {
@@ -180,7 +183,7 @@ class MetaExtension {
 				$options[ $option_name ] = self::get_param_value( $params, $param_key, $sanitize );
 			}
 		}
-
+		\WC_Facebookcommerce_Utils::log( $options );
 		return $options;
 	}
 

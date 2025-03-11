@@ -67,6 +67,7 @@ class Background extends BackgroundJobHandler {
 		$data = $job->{$data_key};
 
 		$job->total = count( $data );
+		error_log( ' running product sync background job for ' . count( $data ) . ' items on blog id ' . get_current_blog_id() );
 
 		// progress indicates how many items have been processed, it
 		// does NOT indicate the processed item key in any way
