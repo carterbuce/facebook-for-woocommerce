@@ -238,6 +238,7 @@ abstract class AbstractFeed {
 	 */
 	public function handle_feed_data_request(): void {
 		$name = $this->data_stream_name;
+		error_log( "{$name} feed: Meta is requesting feed file." );
 		\WC_Facebookcommerce_Utils::log( "{$name} feed: Meta is requesting feed file." );
 
 		$file_path = $this->feed_writer->get_file_path();

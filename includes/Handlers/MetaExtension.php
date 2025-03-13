@@ -211,7 +211,8 @@ class MetaExtension {
 	 * @return void
 	 * @internal
 	 */
-	private static function clear_integration_options() {
+	public static function clear_integration_options() {
+		// call with \WooCommerce\Facebook\Handlers\MetaExtension::clear_integration_options();
 		$options = array(
 			// Connection handler options
 			self::OPTION_ACCESS_TOKEN,
