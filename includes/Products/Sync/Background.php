@@ -249,6 +249,7 @@ class Background extends BackgroundJobHandler {
 	 * @throws ApiException In case of failed API request.
 	 */
 	private function send_item_updates( array $requests ): array {
+		error_log( 'sending product updates via background sync handler' );
 		$facebook_catalog_id = facebook_for_woocommerce()->get_integration()->get_product_catalog_id();
 		$response            = facebook_for_woocommerce()->get_api()->send_item_updates( $facebook_catalog_id, $requests );
 		$response_handles    = $response->handles;

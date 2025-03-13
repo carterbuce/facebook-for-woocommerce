@@ -1388,6 +1388,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 	 **@since 3.1.7
 	 */
 	public function create_product_item_batch_api( $woo_product, $retailer_id, $product_group_id ): string {
+		error_log('create_product_item_batch_api called');
 		try {
 			$product_data        = $woo_product->prepare_product( $retailer_id, \WC_Facebook_Product::PRODUCT_PREP_TYPE_ITEMS_BATCH );
 			$requests            = WC_Facebookcommerce_Utils::prepare_product_requests_items_batch( $product_data );
@@ -1548,6 +1549,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 	 * @return void
 	 */
 	public function update_product_item_batch_api( WC_Facebook_Product $woo_product, string $fb_product_item_id ): void {
+		error_log('update_product_item_batch_api called');
 		$product  = $woo_product->prepare_product( null, \WC_Facebook_Product::PRODUCT_PREP_TYPE_ITEMS_BATCH );
 		$requests = WC_Facebookcommerce_Utils::prepare_product_requests_items_batch( $product );
 
