@@ -165,7 +165,8 @@ class CsvFeedFileWriter implements FeedFileWriter {
 			foreach ( $accessors as $accessor ) {
 				// Map each field in the row to ensure proper string conversion
 				$value = $obj[ $accessor ] ?? '';
-				$row[] = $this->format_field( $value );
+				$row[] = wp_json_encode( $value );
+
 			}
 			if ( fputcsv( $temp_feed_file, $row, $this->delimiter, $this->enclosure, $this->escape_char ) === false ) {
 				throw new PluginException( 'Failed to write a CSV data row.', 500 );
@@ -174,28 +175,6 @@ class CsvFeedFileWriter implements FeedFileWriter {
 
 		// phpcs:ignore -- use php file i/o functions
 		fclose( $temp_feed_file );
-	}
-
-	/**
-	 * @param mixed $value value to format (string, array, object, etc)
-	 *
-	 * @return false|string
-	 */
-	protected function format_field( $value ) {
-		if ( is_array( $value ) ) {
-			// Convert the array to a comma-separated string (or use json_encode if you prefer)
-			return implode( ',', $value );
-		}
-		if ( is_object( $value ) ) {
-			// If the object has a __toString method, use it; otherwise, convert to JSON.
-			if ( method_exists( $value, '__toString' ) ) {
-				return (string) $value;
-			} else {
-				$json_value = wp_json_encode( $value );
-				return $json_value ? $json_value : $value;
-			}
-		}
-		return $value;
 	}
 
 	/**
