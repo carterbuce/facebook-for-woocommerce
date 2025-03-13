@@ -834,6 +834,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 			}
 		}
 		if ( $sync_enabled ) {
+			error_log('on_product_save, sync not enabled!');
 			Admin\Products::save_commerce_fields( $product );
 			switch ( $product->get_type() ) {
 				case 'simple':
@@ -1104,6 +1105,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 	public function on_product_publish( $product_id ) {
 		// bail if the plugin is not configured properly
 		if ( ! $this->is_configured() || ! $this->get_product_catalog_id() ) {
+			error_log('product published but not syncing because plugin is not configured properly.');
 			return;
 		}
 
@@ -1198,6 +1200,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 		}
 
 		if ( ! $this->product_should_be_synced( $woo_product->woo_product ) ) {
+			error_log('on_simple_product_publish failed, product should not be synced');
 			return;
 		}
 
