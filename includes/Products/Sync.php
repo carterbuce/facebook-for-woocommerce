@@ -124,11 +124,13 @@ class Sync {
 
 		// bail if not connected
 		if ( ! facebook_for_woocommerce()->get_connection_handler()->is_connected() ) {
+			error_log(' handling sync stock update: not connected');
 			return;
 		}
 
 		// bail if admin and not AJAX
 		if ( is_admin() && ! wp_doing_ajax() ) {
+			error_log(' handling sync stock update: not admin or not doing ajax');
 			return;
 		}
 
