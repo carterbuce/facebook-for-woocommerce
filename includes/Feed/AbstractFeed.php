@@ -170,7 +170,7 @@ abstract class AbstractFeed {
 	 */
 	public function send_request_to_upload_feed(): void {
 		$name = $this->data_stream_name;
-		error_log( 'sending request to upload feed for: ' . $this->data_stream_name );
+		error_log( 'regenerating feed for: ' . $this->data_stream_name . ', blog id: ' . get_current_blog_id() );
 		$data = array(
 			'url'         => self::get_feed_data_url(),
 			'feed_type'   => $this->feed_type,
