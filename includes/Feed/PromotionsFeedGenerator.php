@@ -45,7 +45,7 @@ class PromotionsFeedGenerator extends FeedGenerator {
 			'orderby'        => 'ID',
 		);
 
-		return PromotionsFeedUtils::get_coupons_data( $query_args );
+		return FeedUploadUtils::get_coupons_data( $query_args );
 	}
 
 	/**

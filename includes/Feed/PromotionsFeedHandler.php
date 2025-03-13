@@ -45,6 +45,6 @@ class PromotionsFeedHandler extends AbstractFeedHandler {
 			'posts_per_page' => - 1, // retrieve all items
 		);
 
-		return PromotionsFeedUtils::get_coupons_data( $query_args );
+		return FeedUploadUtils::get_coupons_data( $query_args );
 	}
 }
