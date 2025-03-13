@@ -13,6 +13,7 @@ namespace WooCommerce\Facebook\Feed;
 use WooCommerce\Facebook\Framework\Api\Exception;
 use WooCommerce\Facebook\Framework\Helper;
 use WooCommerce\Facebook\Framework\Plugin\Exception as PluginException;
+use WooCommerce\Facebook\Utilities\Heartbeat;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -32,19 +33,19 @@ abstract class AbstractFeed {
 	/** The action slug for triggering file upload */
 	const FEED_GEN_COMPLETE_ACTION = 'wc_facebook_feed_generation_completed_';
 
-	/** Schedule feed generation on some interval hook name for children classes. */
-	const SCHEDULE_CALL_BACK = 'schedule_feed_generation';
-	/** Schedule an immediate file generator on the scheduler hook name. For testing mostly. */
-	const REGENERATE_CALL_BACK = 'regenerate_feed';
-	/** Make upload call to Meta hook name for children classes. */
-	const UPLOAD_CALL_BACK = 'send_request_to_upload_feed';
-	/** Stream file to upload endpoint hook name for children classes. */
-	const STREAM_CALL_BACK = 'handle_feed_data_request';
 	/** Hook prefix for Legacy REST API hook name */
 	const LEGACY_API_PREFIX = 'woocommerce_api_';
 	/** @var string the WordPress option name where the secret included in the feed URL is stored */
 	const OPTION_FEED_URL_SECRET = 'wc_facebook_feed_url_secret_';
 
+
+	/**
+	 * The feed writer instance for the given feed.
+	 *
+	 * @var FeedFileWriter
+	 * @since 3.5.0
+	 */
+	protected FeedFileWriter $feed_writer;
 
 	/**
 	 * The feed generator instance for the given feed.
@@ -57,10 +58,10 @@ abstract class AbstractFeed {
 	/**
 	 * The feed handler instance for the given feed.
 	 *
-	 * @var FeedHandler
+	 * @var AbstractFeedHandler
 	 * @since 3.5.0
 	 */
-	protected FeedHandler $feed_handler;
+	protected AbstractFeedHandler $feed_handler;
 
 	/**
 	 * The name of the data feed.
@@ -68,13 +69,6 @@ abstract class AbstractFeed {
 	 * @var string
 	 */
 	protected string $data_stream_name;
-
-	/**
-	 * The option name for the feed URL secret.
-	 *
-	 * @var string
-	 */
-	protected string $feed_url_secret_option_name;
 
 	/**
 	 * The type of feed as per the endpoint requirements.
@@ -91,12 +85,55 @@ abstract class AbstractFeed {
 	protected int $gen_feed_interval;
 
 	/**
+	 * Initialize feed properties.
+	 *
+	 * @param string              $data_stream_name              The data stream name.
+	 * @param string              $feed_type                     The feed type.
+	 * @param int                 $gen_feed_interval             The feed generation interval in seconds.
+	 * @param FeedFileWriter      $feed_writer The feed file writer instance.
+	 * @param AbstractFeedHandler $feed_handler The feed handler instance.
+	 * @param FeedGenerator       $feed_generator The feed generator instance.
+	 */
+	protected function init( string $data_stream_name, string $feed_type, int $gen_feed_interval, FeedFileWriter $feed_writer, AbstractFeedHandler $feed_handler, FeedGenerator $feed_generator ): void {
+		$this->data_stream_name  = $data_stream_name;
+		$this->feed_type         = $feed_type;
+		$this->gen_feed_interval = $gen_feed_interval;
+		$this->feed_writer       = $feed_writer;
+		$this->feed_handler      = $feed_handler;
+		$this->feed_generator    = $feed_generator;
+
+		$this->feed_generator->init();
+		$this->add_hooks( Heartbeat::HOURLY );
+	}
+
+	/**
+	 * Adds the necessary hooks for feed generation and data request handling.
+	 *
+	 * @param string $heartbeat How often to check that the feed generation is scheduled.
+	 *
+	 * @since 3.5.0
+	 */
+	protected function add_hooks( string $heartbeat ): void {
+		add_action( $heartbeat, array( $this, 'schedule_feed_generation' ) );
+		add_action( self::GENERATE_FEED_ACTION . $this->data_stream_name, array( $this, 'regenerate_feed' ) );
+		add_action( self::FEED_GEN_COMPLETE_ACTION . $this->data_stream_name, array( $this, 'send_request_to_upload_feed' ) );
+		add_action(
+			self::LEGACY_API_PREFIX . self::REQUEST_FEED_ACTION . $this->data_stream_name,
+			array(
+				$this,
+				'handle_feed_data_request',
+			)
+		);
+	}
+
+	/**
 	 * Schedules the recurring feed generation.
 	 *
 	 * @since 3.5.0
 	 */
 	public function schedule_feed_generation(): void {
 		$schedule_action_hook_name = self::GENERATE_FEED_ACTION . $this->data_stream_name;
+		error_log( 'scheduling feed generation for: ' . $this->data_stream_name );
 		if ( ! as_next_scheduled_action( $schedule_action_hook_name ) ) {
 			as_schedule_recurring_action(
 				time(),
@@ -116,6 +153,7 @@ abstract class AbstractFeed {
 	 * @since 3.5.0
 	 */
 	public function regenerate_feed(): void {
+		error_log( 'regenerating feed for: ' . $this->data_stream_name );
 		// Maybe use new ( experimental ), feed generation framework.
 		if ( \WC_Facebookcommerce::instance()->get_integration()->is_new_style_feed_generation_enabled() ) {
 			$this->feed_generator->queue_start();
@@ -133,6 +171,7 @@ abstract class AbstractFeed {
 	 */
 	public function send_request_to_upload_feed(): void {
 		$name = $this->data_stream_name;
+		error_log( 'sending request to upload feed for: ' . $this->data_stream_name );
 		$data = array(
 			'url'         => self::get_feed_data_url(),
 			'feed_type'   => $this->feed_type,
@@ -142,8 +181,8 @@ abstract class AbstractFeed {
 		try {
 			$cpi_id = get_option( 'wc_facebook_commerce_partner_integration_id', '' );
 			facebook_for_woocommerce()->
-				get_api()->
-				create_common_data_feed_upload( $cpi_id, $data );
+			get_api()->
+			create_common_data_feed_upload( $cpi_id, $data );
 		} catch ( Exception $e ) {
 			// Log the error and continue.
 			\WC_Facebookcommerce_Utils::log( "{$name} feed: Failed to create feed upload request: " . $e->getMessage() );
@@ -155,8 +194,8 @@ abstract class AbstractFeed {
 	 * Sample url:
 	 * https://your-site-url.com/?wc-api=wc_facebook_get_feed_data_example&secret=your_generated_secret
 	 *
-	 * @since 3.5.0
 	 * @return string
+	 * @since 3.5.0
 	 */
 	public function get_feed_data_url(): string {
 		$query_args = array(
@@ -173,14 +212,16 @@ abstract class AbstractFeed {
 	/**
 	 * Gets the secret value that should be included in the legacy WooCommerce REST API URL.
 	 *
-	 * @since 3.5.0
 	 * @return string
+	 * @since 3.5.0
 	 */
 	public function get_feed_secret(): string {
-		$secret = get_option( $this->feed_url_secret_option_name, '' );
+		$secret_option_name = self::OPTION_FEED_URL_SECRET . $this->data_stream_name;
+
+		$secret = get_option( $secret_option_name, '' );
 		if ( ! $secret ) {
-			$secret = wp_hash( 'example-feed-' . time() );
-			update_option( $this->feed_url_secret_option_name, $secret );
+			$secret = wp_hash( 'example-feed-' . time() ); // TODO is there a default secret we can use
+			update_option( $secret_option_name, $secret );
 		}
 
 		return $secret;
@@ -199,9 +240,9 @@ abstract class AbstractFeed {
 		$name = $this->data_stream_name;
 		\WC_Facebookcommerce_Utils::log( "{$name} feed: Meta is requesting feed file." );
 
-		$file_path = $this->feed_handler->get_feed_writer()->get_file_path();
+		$file_path = $this->feed_writer->get_file_path();
 
-		// regenerate if the file doesn't exist.
+		// regenerate if the file doesn't exist using the legacy flow.
 		if ( ! file_exists( $file_path ) ) {
 			$this->feed_handler->generate_feed_file();
 		}
