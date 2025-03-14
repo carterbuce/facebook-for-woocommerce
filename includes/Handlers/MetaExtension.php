@@ -372,6 +372,7 @@ class MetaExtension {
 	 * @since 2.5.2
 	 */
 	public static function rest_update_fb_settings( WP_REST_Request $request ) {
+		error_log( 'rest_update_fb_settings callback hit' );
 		// Get JSON data from request body
 		$params = $request->get_json_params();
 
