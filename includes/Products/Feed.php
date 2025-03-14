@@ -163,7 +163,7 @@ class Feed {
 	 * @since 1.11.0
 	 */
 	public function schedule_feed_generation() {
-		error_log( 'trying to schedule product feed generation for blog id: ' . get_current_blog_id() );
+		error_log( 'trying to schedule product feed generation for blog id: ' . get_current_blog_id() . ', ' . get_blog_details( get_current_blog_id() )->blogname );
 		$integration   = facebook_for_woocommerce()->get_integration();
 		$configured_ok = $integration && $integration->is_configured();
 		// Only schedule feed job if store has not opted out of product sync.
@@ -171,12 +171,12 @@ class Feed {
 		// Only schedule if has not opted out of feed generation (e.g. large stores).
 		$store_allows_feed = $configured_ok && $integration->is_legacy_feed_file_generation_enabled();
 		if ( ! $store_allows_sync || ! $store_allows_feed ) {
-			error_log( 'couldnt schedule product feed generation for blog id: ' . get_current_blog_id() . ' is store configured: ' . ( $configured_ok ? 'yes' : 'no' ) . ' store allows sync: ' . ( $integration->is_product_sync_enabled() ? 'yes' : 'no' ) . ' store allows feed: ' . ( $integration->is_legacy_feed_file_generation_enabled() ? 'yes' : 'no' ) );
+			error_log( 'couldnt schedule product feed generation for blog id: ' . get_current_blog_id() . ', ' . get_blog_details( get_current_blog_id() )->blogname . '. is store configured: ' . ( $configured_ok ? 'yes' : 'no' ) . ' store allows sync: ' . ( $integration->is_product_sync_enabled() ? 'yes' : 'no' ) . ' store allows feed: ' . ( $integration->is_legacy_feed_file_generation_enabled() ? 'yes' : 'no' ) );
 			as_unschedule_all_actions( self::GENERATE_FEED_ACTION );
 			return;
 		}
 
-		error_log( 'scheduling product feed generation for blog id: ' . get_current_blog_id() );
+		error_log( 'scheduling product feed generation for blog id: ' . get_current_blog_id() . ', ' . get_blog_details( get_current_blog_id() )->blogname );
 
 		/**
 		 * Filters the frequency with which the product feed data is generated.
@@ -189,7 +189,7 @@ class Feed {
 		$interval = apply_filters( 'wc_facebook_feed_generation_interval', DAY_IN_SECONDS );
 		error_log( 'feed interval: ' . $interval );
 		if ( ! as_next_scheduled_action( self::GENERATE_FEED_ACTION ) ) {
-			error_log( 'scheduling product feed generation for blog id: ' . get_current_blog_id() );
+			error_log( 'scheduling product feed generation for blog id: ' . get_current_blog_id() . ', ' . get_blog_details( get_current_blog_id() )->blogname );
 			as_schedule_recurring_action( time(), max( 2, $interval ), self::GENERATE_FEED_ACTION, array(), facebook_for_woocommerce()->get_id_dasherized() );
 		}
 	}
@@ -203,7 +203,7 @@ class Feed {
 	public function send_request_to_upload_feed() {
 		$feed_id = self::retrieve_or_create_integration_feed_id();
 		if ( empty( $feed_id ) ) {
-			error_log( ' product Feed: integration feed ID is null or empty, feed will not be uploaded for blog id: ' . get_current_blog_id() );
+			error_log( ' product Feed: integration feed ID is null or empty, feed will not be uploaded for blog id: ' . get_current_blog_id() . ', ' . get_blog_details( get_current_blog_id() )->blogname );
 			WC_Facebookcommerce_Utils::log( ' product Feed: integration feed ID is null or empty, feed will not be uploaded.' );
 			return;
 		}
@@ -213,7 +213,7 @@ class Feed {
 		];
 
 		try {
-			error_log( 'sending request to upload product feed for blog id: ' . get_current_blog_id() . ' and feed data url: ' . self::get_feed_data_url() );
+			error_log( 'sending request to upload product feed for blog id: ' . get_current_blog_id() . ', ' . get_blog_details( get_current_blog_id() )->blogname . ' and feed data url: ' . self::get_feed_data_url() );
 			facebook_for_woocommerce()->get_api()->create_product_feed_upload( $feed_id, $data );
 		} catch ( Exception $exception ) {
 			facebook_for_woocommerce()->log( 'Failed to create product feed upload request: ' . $exception->getMessage() );
@@ -228,7 +228,7 @@ class Feed {
 	 * @internal
 	 */
 	public function retrieve_or_create_integration_feed_id() {
-		error_log( 'trying to retrieve or create feed id for blog: ' . get_current_blog_id() );
+		error_log( 'trying to retrieve or create feed id for blog: ' . get_current_blog_id() . ', ' . get_blog_details( get_current_blog_id() )->blogname );
 		// Step 1 - Get feed ID if it is already available in local cache
 		$feed_id = facebook_for_woocommerce()->get_integration()->get_feed_id();
 		if ( $feed_id ) {

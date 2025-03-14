@@ -167,7 +167,7 @@ class MetaExtension {
 			'catalog_id'                      => \WC_Facebookcommerce_Integration::OPTION_PRODUCT_CATALOG_ID,
 		);
 
-		error_log( 'connected to facebook on blog id: ' . get_current_blog_id() );
+		error_log( 'connected to facebook on blog id: ' . get_current_blog_id() . ', ' . get_blog_details( get_current_blog_id() )->blogname );
 
 		// Process each parameter
 		foreach ( $mapping as $param_key => $option_name ) {
