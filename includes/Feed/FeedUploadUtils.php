@@ -126,8 +126,11 @@ class FeedUploadUtils {
 			}
 
 			// Map target selection
-			// TODO check for product exclusions
-			if ( empty( $coupon->get_product_ids() ) && empty( $coupon->get_product_categories() ) ) {
+			if ( empty( $coupon->get_product_ids() )
+				&& empty( $coupon->get_product_categories() )
+				&& empty( $coupon->get_excluded_product_ids() )
+				&& empty( $coupon->get_excluded_product_categories() )
+			) {
 				// Coupon applies to all products.
 				$target_selection = 'ALL_CATALOG_PRODUCTS';
 			} else {
