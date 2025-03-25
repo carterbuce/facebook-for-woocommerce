@@ -67,7 +67,7 @@ class Background extends BackgroundJobHandler {
 		$data = $job->{$data_key};
 
 		$job->total = count( $data );
-		error_log( ' running product sync background job for ' . count( $data ) . ' items on blog id ' . get_current_blog_id() . ', ' . get_blog_details( get_current_blog_id() )->blogname );
+		facebook_for_woocommerce()->dev_log( ' running product sync background job for ' . count( $data ) . ' items' );
 
 		// progress indicates how many items have been processed, it
 		// does NOT indicate the processed item key in any way
@@ -249,7 +249,7 @@ class Background extends BackgroundJobHandler {
 	 * @throws ApiException In case of failed API request.
 	 */
 	private function send_item_updates( array $requests ): array {
-		error_log( 'sending product updates via background sync handler' );
+		facebook_for_woocommerce()->dev_log( 'sending product updates via background sync handler' );
 		$facebook_catalog_id = facebook_for_woocommerce()->get_integration()->get_product_catalog_id();
 		$response            = facebook_for_woocommerce()->get_api()->send_item_updates( $facebook_catalog_id, $requests );
 		$response_handles    = $response->handles;

@@ -38,7 +38,7 @@ class PromotionsFeedHandler extends AbstractFeedHandler {
 	 * @since 3.5.0
 	 */
 	public function get_feed_data(): array {
-		error_log( 'starting promotions feed handler' );
+		facebook_for_woocommerce()->dev_log( 'starting promotions feed handler' );
 		$query_args = array(
 			'post_type'      => 'shop_coupon',
 			'post_status'    => 'publish',

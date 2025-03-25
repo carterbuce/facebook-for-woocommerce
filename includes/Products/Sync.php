@@ -73,7 +73,7 @@ class Sync {
 	 * @since 2.0.0
 	 */
 	public function create_or_update_all_products() {
-		error_log( 'create_or_update_all_products for blog: ' . get_current_blog_id() . ', ' . get_blog_details(get_current_blog_id())->blogname );
+		facebook_for_woocommerce()->dev_log( 'create_or_update_all_products');
 		$profiling_logger = facebook_for_woocommerce()->get_profiling_logger();
 		$profiling_logger->start( 'create_or_update_all_products' );
 
@@ -124,13 +124,13 @@ class Sync {
 
 		// bail if not connected
 		if ( ! facebook_for_woocommerce()->get_connection_handler()->is_connected() ) {
-			error_log(' handling sync stock update: not connected');
+			facebook_for_woocommerce()->dev_log(' handling sync stock update: not connected');
 			return;
 		}
 
 		// bail if admin and not AJAX
 		if ( is_admin() && ! wp_doing_ajax() ) {
-			error_log(' handling sync stock update: not admin or not doing ajax');
+			facebook_for_woocommerce()->dev_log(' handling sync stock update: not admin or not doing ajax');
 			return;
 		}
 
@@ -150,7 +150,7 @@ class Sync {
 //		error_log( 'trying to schedule product SYNC for blog id: ' . get_current_blog_id() );
 		if ( ! empty( $this->requests ) ) {
 
-			error_log( 'scheduling product SYNC for blog id: ' . get_current_blog_id()  . ', ' . get_blog_details(get_current_blog_id())->blogname );
+			facebook_for_woocommerce()->dev_log( 'scheduling product SYNC');
 			$job_handler = facebook_for_woocommerce()->get_products_sync_background_handler();
 			$job         = $job_handler->create_job( array( 'requests' => $this->requests ) );
 			$job_handler->dispatch();

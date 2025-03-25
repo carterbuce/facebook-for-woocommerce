@@ -128,7 +128,7 @@ class Connection extends Abstract_Settings_Screen {
 		// Check if we should render iframe
 		if ( $this->use_enhanced_onboarding() ) {
 			$this->render_facebook_iframe();
-			parent::render();
+			// parent::render();
 			return;
 		}
 
@@ -390,7 +390,7 @@ class Connection extends Abstract_Settings_Screen {
 			window.addEventListener('message', function(event) {
 				const message = event.data;
 				const messageEvent = message.event;
-				
+
 				if (messageEvent === 'CommerceExtension::INSTALL' && message.success) {
 					const requestBody = {
 						access_token: message.access_token,

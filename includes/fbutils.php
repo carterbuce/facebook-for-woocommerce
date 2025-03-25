@@ -408,7 +408,7 @@ if ( ! class_exists( 'WC_Facebookcommerce_Utils' ) ) :
 					facebook_for_woocommerce()->log( $message );
 				}
 			} else {
-				error_log(
+				facebook_for_woocommerce()->dev_log(
 					'external merchant setting is null, something wrong here: ' .
 					$message
 				);
@@ -428,7 +428,7 @@ if ( ! class_exists( 'WC_Facebookcommerce_Utils' ) ) :
 					facebook_for_woocommerce()->log( $message );
 				}
 			} else {
-				error_log( 'external merchant setting is null' );
+				facebook_for_woocommerce()->dev_log( 'external merchant setting is null' );
 			}
 		}
 
@@ -861,7 +861,7 @@ if ( ! class_exists( 'WC_Facebookcommerce_Utils' ) ) :
 		/**
 		 * Utility function for sending exception logs to Meta.
 		 * @since 3.5.0
-		 * 
+		 *
 		 * @param Throwable $error error object
 		 * @param array $context wiki: https://www.internalfb.com/wiki/Commerce_Platform/Teams/3P_Ecosystems_(3PE)/3rd_Party_platforms/Woo_Commerce/How_To_Use_WooCommerce_Side_Logging/
 		 */
@@ -872,7 +872,7 @@ if ( ! class_exists( 'WC_Facebookcommerce_Utils' ) ) :
 		/**
 		 * Utility function for sending telemetry logs to Meta.
 		 * @since 3.5.0
-		 * 
+		 *
 		 * @param string $message
 		 * @param array $context wiki: https://www.internalfb.com/wiki/Commerce_Platform/Teams/3P_Ecosystems_(3PE)/3rd_Party_platforms/Woo_Commerce/How_To_Use_WooCommerce_Side_Logging/
 		 */

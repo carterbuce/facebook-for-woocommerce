@@ -834,7 +834,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 			}
 		}
 		if ( $sync_enabled ) {
-			error_log('on_product_save, sync not enabled!');
+			facebook_for_woocommerce()->dev_log('on_product_save, sync enabled');
 			Admin\Products::save_commerce_fields( $product );
 			switch ( $product->get_type() ) {
 				case 'simple':
@@ -1105,7 +1105,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 	public function on_product_publish( $product_id ) {
 		// bail if the plugin is not configured properly
 		if ( ! $this->is_configured() || ! $this->get_product_catalog_id() ) {
-			error_log('product published but not syncing because plugin is not configured properly.');
+			facebook_for_woocommerce()->dev_log('product published but not syncing because plugin is not configured properly.');
 			return;
 		}
 
@@ -1200,7 +1200,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 		}
 
 		if ( ! $this->product_should_be_synced( $woo_product->woo_product ) ) {
-			error_log('on_simple_product_publish failed, product should not be synced');
+			facebook_for_woocommerce()->dev_log('on_simple_product_publish failed, product should not be synced');
 			return;
 		}
 
@@ -1391,7 +1391,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 	 **@since 3.1.7
 	 */
 	public function create_product_item_batch_api( $woo_product, $retailer_id, $product_group_id ): string {
-		error_log('create_product_item_batch_api called');
+		facebook_for_woocommerce()->dev_log('create_product_item_batch_api called');
 		try {
 			$product_data        = $woo_product->prepare_product( $retailer_id, \WC_Facebook_Product::PRODUCT_PREP_TYPE_ITEMS_BATCH );
 			$requests            = WC_Facebookcommerce_Utils::prepare_product_requests_items_batch( $product_data );
@@ -1552,7 +1552,7 @@ class WC_Facebookcommerce_Integration extends WC_Integration {
 	 * @return void
 	 */
 	public function update_product_item_batch_api( WC_Facebook_Product $woo_product, string $fb_product_item_id ): void {
-		error_log('update_product_item_batch_api called');
+		facebook_for_woocommerce()->dev_log('update_product_item_batch_api called');
 		$product  = $woo_product->prepare_product( null, \WC_Facebook_Product::PRODUCT_PREP_TYPE_ITEMS_BATCH );
 		$requests = WC_Facebookcommerce_Utils::prepare_product_requests_items_batch( $product );
 
