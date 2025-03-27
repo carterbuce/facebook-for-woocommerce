@@ -65,7 +65,20 @@ class Connection extends Abstract_Settings_Screen {
 	 * @return bool
 	 */
 	protected function use_enhanced_onboarding() {
-		return facebook_for_woocommerce()->get_integration()->use_enhanced_onboarding();
+		// First check if the integration has enabled enhanced onboarding
+		$integration = facebook_for_woocommerce()->get_integration();
+		if ( ! $integration->use_enhanced_onboarding() ) {
+			return false;
+		}
+
+		// No connection, new user returns true
+		$connection_handler              = facebook_for_woocommerce()->get_connection_handler();
+		$commerce_partner_integration_id = $connection_handler->get_commerce_partner_integration_id();
+
+		if ( ! $connection_handler->is_connected() || ! empty( $commerce_partner_integration_id ) ) {
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -457,6 +470,15 @@ class Connection extends Abstract_Settings_Screen {
 			array(
 				'title' => __( 'Debug', 'facebook-for-woocommerce' ),
 				'type'  => 'title',
+			),
+
+			array(
+				'id'       => \WC_Facebookcommerce_Integration::SETTING_ENABLE_META_DIAGNOSIS,
+				'title'    => __( 'Enable meta diagnosis', 'facebook-for-woocommerce' ),
+				'type'     => 'checkbox',
+				'desc'     => __( 'Upload plugin events to Meta', 'facebook-for-woocommerce' ),
+				'desc_tip' => sprintf( __( 'Allow Meta to monitor your logs and help fix issues. Personally identifiable information will not be collected.', 'facebook-for-woocommerce' ) ),
+				'default'  => 'yes',
 			),
 
 			array(
