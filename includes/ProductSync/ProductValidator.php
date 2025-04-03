@@ -139,6 +139,7 @@ class ProductValidator {
 		$this->validate_product_terms();
 		$this->validate_product_description();
 		$this->validate_product_title();
+		$this->validate_product_is_not_external();
 	}
 
 	/**
@@ -156,6 +157,7 @@ class ProductValidator {
 		$this->validate_product_terms();
 		$this->validate_product_description();
 		$this->validate_product_title();
+		$this->validate_product_is_not_external();
 	}
 
 	/**
@@ -171,6 +173,7 @@ class ProductValidator {
 		$this->validate_product_terms();
 		$this->validate_product_description();
 		$this->validate_product_title();
+		$this->validate_product_is_not_external();
 	}
 
 	/**
@@ -425,6 +428,12 @@ class ProductValidator {
 		// No more than MAX_NUMBER_OF_ATTRIBUTES_IN_VARIATION ar allowed to be used.
 		if ( $used_attributes_count > self::MAX_NUMBER_OF_ATTRIBUTES_IN_VARIATION ) {
 			throw new ProductInvalidException( __( 'Too many attributes selected for product. Use 4 or less.', 'facebook-for-woocommerce' ) );
+		}
+	}
+
+	protected function validate_product_is_not_external() {
+		if ( 'external' === $this->product->get_type() ) {
+			throw new ProductInvalidException( __( 'External products are not supported.', 'facebook-for-woocommerce' ) );
 		}
 	}
 }
