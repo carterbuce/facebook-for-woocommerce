@@ -88,7 +88,7 @@ class ProductValidator {
 	 * ProductValidator constructor.
 	 *
 	 * @param WC_Facebookcommerce_Integration $integration The FB integration instance.
-	 * @param WC_Product                      $product     The product to validate. Accepts both variations and variable products.
+	 * @param WC_Product                      $product The product to validate. Accepts both variations and variable products.
 	 */
 	public function __construct( WC_Facebookcommerce_Integration $integration, WC_Product $product ) {
 		$this->product           = $product;
@@ -111,6 +111,7 @@ class ProductValidator {
 	 * __get method for backward compatibility.
 	 *
 	 * @param string $key property name
+	 *
 	 * @return mixed
 	 * @since 3.0.32
 	 */
@@ -119,6 +120,7 @@ class ProductValidator {
 		if ( 'facebook_product' === $key ) {
 			/* translators: %s property name. */
 			_doing_it_wrong( __FUNCTION__, sprintf( esc_html__( 'The %s property is protected and should not be accessed outside its class.', 'facebook-for-woocommerce' ), esc_html( $key ) ), '3.0.32' );
+
 			return $this->$key;
 		}
 
@@ -140,14 +142,14 @@ class ProductValidator {
 		$this->validate_product_description();
 		$this->validate_product_title();
 		$this->validate_product_is_not_external();
+		$this->validate_product_variation_attributes();
 	}
 
 	/**
 	 * Validate whether the product should be synced to Facebook but skip the status check for backwards compatibility.
 	 *
-	 * @internal Do not use this as it will likely be removed.
-	 *
 	 * @throws ProductExcludedException If product should not be synced.
+	 * @internal Do not use this as it will likely be removed.
 	 */
 	public function validate_but_skip_status_check() {
 		$this->validate_sync_enabled_globally();
@@ -158,13 +160,14 @@ class ProductValidator {
 		$this->validate_product_description();
 		$this->validate_product_title();
 		$this->validate_product_is_not_external();
+		$this->validate_product_variation_attributes();
 	}
 
 	/**
 	 * Validate whether the product should be synced to Facebook but skip the sync field check.
 	 *
-	 * @since 3.0.6
 	 * @throws ProductExcludedException|ProductInvalidException If product should not be synced.
+	 * @since 3.0.6
 	 */
 	public function validate_but_skip_sync_field() {
 		$this->validate_sync_enabled_globally();
@@ -174,6 +177,7 @@ class ProductValidator {
 		$this->validate_product_description();
 		$this->validate_product_title();
 		$this->validate_product_is_not_external();
+		$this->validate_product_variation_attributes();
 	}
 
 	/**
@@ -317,9 +321,9 @@ class ProductValidator {
 		/**
 		 * Filters whether a product should be synced to FB.
 		 *
-		 * @since 2.6.26
-		 *
 		 * @param WC_Product $product the product object.
+		 *
+		 * @since 2.6.26
 		 */
 		if ( ! apply_filters( 'wc_facebook_should_sync_product', true, $this->product ) ) {
 			throw new ProductExcludedException( __( 'Product excluded by wc_facebook_should_sync_product filter.', 'facebook-for-woocommerce' ) );
@@ -337,7 +341,7 @@ class ProductValidator {
 			// Variable product has no variations with sync enabled so it shouldn't be synced.
 			throw $invalid_exception;
 		} elseif ( 'no' === $this->product->get_meta( self::SYNC_ENABLED_META_KEY ) ) {
-				throw $invalid_exception;
+			throw $invalid_exception;
 		}
 	}
 
@@ -434,6 +438,35 @@ class ProductValidator {
 	protected function validate_product_is_not_external() {
 		if ( 'external' === $this->product->get_type() ) {
 			throw new ProductInvalidException( __( 'External products are not supported.', 'facebook-for-woocommerce' ) );
+		}
+	}
+
+	/**
+	 * When variations use product attributes, they must define a value for all of them. For example,
+	 * a variation that targets "Any Size" or "Any Color" is not supported. It must define the specific color or size.
+	 *
+	 * @return void
+	 * @throws ProductInvalidException
+	 */
+	protected function validate_product_variation_attributes() {
+		// No need to validate if it's not a variable product
+		if ( ! $this->product->is_type( 'variation' ) ) {
+			return;
+		}
+
+		$product_attributes = $this->product->get_attributes();
+
+		foreach ( $product_attributes as $attribute_name => $attribute_value ) {
+			// Ensure that all attributes are set
+			if ( empty( $attribute_value ) ) {
+				throw new ProductInvalidException(
+					sprintf(
+						'Variation for product %s must define a specific value for %s.',
+						$this->product->get_id(),
+						$attribute_name
+					)
+				);
+			}
 		}
 	}
 }
